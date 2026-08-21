@@ -1,24 +1,23 @@
 const { expect } = require("chai");
 const { ethers, upgrades } = require("hardhat");
 
-describe("StakingRewardsUpgradeable - Module 1: Initialization", function () {
-  let stakingToken, rewardsToken, stakingRewards;
+describe("StakingRewardsUpgradeable - Module 1: State Setup", function () {
+  let token, stakingRewards;
   let owner, devWallet, user1;
-  const LOCK_DURATION = 7 * 24 * 60 * 60; // 7 days lock time
+  const LOCK_DURATION = 7 * 24 * 60 * 60; // 7 days in seconds
 
   beforeEach(async function () {
     [owner, devWallet, user1] = await ethers.getSigners();
 
-    // Deploy mock ERC-20 tokens
-    const MockToken = await ethers.getContractFactory("@openzeppelin/contracts/token/ERC20/IERC20.sol:IERC20"); 
-
+    // 1. Deploy the local Mock Token for testing
+    const MockToken = await ethers.getContractFactory("MockToken");
     token = await MockToken.deploy();
+    await token.waitForDeployment();
 
-    // Deploy Upgradeable Staking Contract via Proxy
+    // 2. Deploy the UUPS Upgradeable Staking Contract
     const StakingRewards = await ethers.getContractFactory("StakingRewardsUpgradeable");
-
-
-    // Pass the SAME token address for both stakingToken and rewardsToken
+    
+    // Pass the same token address for both staking and rewards
     stakingRewards = await upgrades.deployProxy(
       StakingRewards,
       [
@@ -32,13 +31,11 @@ describe("StakingRewardsUpgradeable - Module 1: Initialization", function () {
     await stakingRewards.waitForDeployment();
   });
 
-  it("Should set the same token address for both staking and rewards", async function () {
+  it("Should set state variables correctly on initialization", async function () {
     const tokenAddress = await token.getAddress();
+
     expect(await stakingRewards.stakingToken()).to.equal(tokenAddress);
     expect(await stakingRewards.rewardsToken()).to.equal(tokenAddress);
-  });
-
-  it("Should set devWallet, lockDuration, and owner correctly", async function () {
     expect(await stakingRewards.devWallet()).to.equal(devWallet.address);
     expect(await stakingRewards.lockDuration()).to.equal(LOCK_DURATION);
     expect(await stakingRewards.owner()).to.equal(owner.address);
@@ -46,6 +43,7 @@ describe("StakingRewardsUpgradeable - Module 1: Initialization", function () {
 
   it("Should prevent double initialization", async function () {
     const tokenAddress = await token.getAddress();
+
     await expect(
       stakingRewards.initialize(
         tokenAddress,
@@ -54,5 +52,15 @@ describe("StakingRewardsUpgradeable - Module 1: Initialization", function () {
         LOCK_DURATION
       )
     ).to.be.reverted;
+  });
+});
+
+describe("StakingRewardsUpgradeable - Module 2: Synthetix Math View Functions", function () {
+  it("Should return zero rewardPerToken when totalSupply is zero", async function () {
+    expect(await stakingRewards.rewardPerToken()).to.equal(0);
+  });
+
+  it("Should return zero earned rewards for user with no stake", async function () {
+    expect(await stakingRewards.earned(user1.address)).to.equal(0);
   });
 });
