@@ -58,4 +58,20 @@ contract StakingRewardsUpgradeable is
     }
 
     function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
+
+
+    function previousRewardEligibility() public view returns (uint256){
+        return block.timestamp < finishAt ? block.timestamp : finishAt;
+    }
+
+    function rewardPerToken() public view returns (uint256){
+        if (totalSupply == 0){
+            return rewardPerTokenStored;
+        }
+        return rewardPerTokenStored + (rewardRate * ( previousRewardEligibility() - updatesAt)* 10**18)/totalSupply;
+    }
+
+    function earned(address account) public view returns(uint256){
+        return ((balanceOf[account] * (rewardPerToken() - userRewardPerTokenPaid[account])) / 1e18) + rewards[account];
+    }
 }
