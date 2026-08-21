@@ -10,7 +10,7 @@ describe("StakingRewardsUpgradeable - Module 1: Initialization", function () {
     [owner, devWallet, user1] = await ethers.getSigners();
 
     // Deploy mock ERC-20 tokens
-    const MockToken = await ethers.getContractFactory("MyContract"); 
+    const MockToken = await ethers.getContractFactory("@openzeppelin/contracts/token/ERC20/IERC20.sol:IERC20"); 
 
     token = await MockToken.deploy();
 
