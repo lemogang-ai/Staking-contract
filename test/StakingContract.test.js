@@ -14,6 +14,7 @@ describe("StakingRewardsUpgradeable Suite", function () {
     await token.waitForDeployment();
 
     const StakingRewards = await ethers.getContractFactory("StakingRewardsUpgradeable");
+    
     stakingRewards = await upgrades.deployProxy(
       StakingRewards,
       [
@@ -57,6 +58,25 @@ describe("StakingRewardsUpgradeable Suite", function () {
 
     it("Should return zero earned rewards for user with no stake", async function () {
       expect(await stakingRewards.earned(user1.address)).to.equal(0);
+    });
+  });
+
+  describe("Module 4: Core User Functions", function () {
+    it("Should allow user to stake tokens and update state", async function () {
+      const stakeAmount = ethers.parseEther("100");
+
+      // 1. Mint tokens to user1 so they have balance to stake
+      await token.mint(user1.address, stakeAmount);
+
+      // 2. Approve stakingRewards contract to spend user1's tokens
+      await token.connect(user1).approve(await stakingRewards.getAddress(), stakeAmount);
+
+      // 3. Call stake
+      await stakingRewards.connect(user1).stake(stakeAmount);
+
+      // 4. Assert state changes
+      expect(await stakingRewards.totalSupply()).to.equal(stakeAmount);
+      expect(await stakingRewards.balanceOf(user1.address)).to.equal(stakeAmount);
     });
   });
 });
