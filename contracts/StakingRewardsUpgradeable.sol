@@ -105,19 +105,19 @@ contract StakingRewardsUpgradeable is
         stakeTime[msg.sender] = block.timestamp;
 
         // Interaction (External Contract Call Last)
-        bool success = stakingToken.transfer(msg.sender, _amount);
+        bool success = stakingToken.transferFrom(msg.sender, address(this),_amount);
         require(success, "Token transfer failed");
     }
 
     function withdraw(uint256 _amount) external nonReentrant updateReward(msg.sender){
         require(_amount > 0, "Cannot withdraw 0");
-        require(_amount <= balanceOf[msg.sender], "Cannot withdraw more than your staked balance")
-        require(block.timestamp >= stakeTime[msg.sender] + lockDuration, "Tokens still in lock")
+        require(_amount <= balanceOf[msg.sender], "Cannot withdraw more than your staked balance");
+        require(block.timestamp >= stakeTime[msg.sender] + lockDuration, "Tokens still in lock");
 
         totalSupply -= _amount;
         balanceOf[msg.sender] -= _amount;
 
-        bool success = stakingToken.transfer(msg.sender,address(this), _amount);
+        bool success = stakingToken.transfer(msg.sender, _amount);
         require(success , "Token transfer failed");
     }
 

@@ -83,7 +83,7 @@ describe("StakingRewardsUpgradeable Suite", function () {
       const stakeAmount = ethers.parseEther("100");
 
       // Setup: User stakes 100 tokens
-      await token.transfer(user1.address, stakeAmount);
+      await token.mint(user1.address, stakeAmount);
       await token.connect(user1).approve(await stakingRewards.getAddress(), stakeAmount);
       await stakingRewards.connect(user1).stake(stakeAmount);
 
@@ -99,7 +99,7 @@ describe("StakingRewardsUpgradeable Suite", function () {
       expect(await stakingRewards.balanceOf(user1.address)).to.equal(0);
     });
 
-    
+
 
   });
 });
