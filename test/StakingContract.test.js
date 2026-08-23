@@ -78,5 +78,28 @@ describe("StakingRewardsUpgradeable Suite", function () {
       expect(await stakingRewards.totalSupply()).to.equal(stakeAmount);
       expect(await stakingRewards.balanceOf(user1.address)).to.equal(stakeAmount);
     });
+
+    it("Should allow user to withdraw staked tokens after lock duration", async function () {
+      const stakeAmount = ethers.parseEther("100");
+
+      // Setup: User stakes 100 tokens
+      await token.transfer(user1.address, stakeAmount);
+      await token.connect(user1).approve(await stakingRewards.getAddress(), stakeAmount);
+      await stakingRewards.connect(user1).stake(stakeAmount);
+
+      // Fast-forward EVM time past lockDuration (7 days)
+      await ethers.provider.send("evm_increaseTime", [LOCK_DURATION + 1]);
+      await ethers.provider.send("evm_mine");
+
+      // Call withdraw
+      await stakingRewards.connect(user1).withdraw(stakeAmount);
+
+      // Assert state updates
+      expect(await stakingRewards.totalSupply()).to.equal(0);
+      expect(await stakingRewards.balanceOf(user1.address)).to.equal(0);
+    });
+
+    
+
   });
 });
