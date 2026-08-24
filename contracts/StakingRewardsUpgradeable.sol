@@ -35,6 +35,8 @@ contract StakingRewardsUpgradeable is
     uint256 private constant _ENTERED = 2;
     uint256 private _status;
 
+    event RewardAdded(uint256 reward);
+
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
         _disableInitializers();
@@ -132,5 +134,21 @@ contract StakingRewardsUpgradeable is
         }
     }
 
-    
+    function notifyRewardAmount(uint256 reward) external onlyOwner{
+        if (block.timestamp >= finishAt) {
+        rewardRate = reward / lockDuration;
+        } else {
+            uint256 remainingTime = finishAt - block.timestamp;
+            uint256 remainingReward = remainingTime * rewardRate;
+            rewardRate = (reward + remainingReward) / lockDuration;
+        }
+
+        // Ensure contract holds enough reward tokens to pay out the new rate over the duration
+        uint256 balance = rewardsToken.balanceOf(address(this));
+        require(rewardRate * lockDuration <= balance, "Reward rate exceeds contract balance");
+
+        updatedAt = block.timestamp;
+        finishAt = block.timestamp + lockDuration;
+        emit RewardAdded(reward);
+    }
 }
