@@ -121,4 +121,16 @@ contract StakingRewardsUpgradeable is
         require(success , "Token transfer failed");
     }
 
+    function getReward() external nonReentrant updateReward(msg.sender){
+
+        uint256 userReward = rewards[msg.sender];
+       
+        if (userReward > 0) {
+        rewards[msg.sender] = 0;
+        bool success = rewardsToken.transfer(msg.sender, userReward);
+        require(success, "Reward transfer failed");
+        }
+    }
+
+    
 }

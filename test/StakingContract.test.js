@@ -99,7 +99,36 @@ describe("StakingRewardsUpgradeable Suite", function () {
       expect(await stakingRewards.balanceOf(user1.address)).to.equal(0);
     });
 
+    it("Should allow user to claim accumulated rewards", async function () {
+      const stakeAmount = ethers.parseEther("100");
 
+      // User stakes tokens
+      await token.mint(user1.address, stakeAmount);
+      await token.connect(user1).approve(await stakingRewards.getAddress(), stakeAmount);
+      await stakingRewards.connect(user1).stake(stakeAmount);
 
+      // Fast-forward time so rewards accrue
+      await ethers.provider.send("evm_increaseTime", [86400]); // 1 day
+      await ethers.provider.send("evm_mine");
+
+      // Call getReward
+      await expect(stakingRewards.connect(user1).getReward()).to.not.be.reverted;
+    });
+  });
+
+  describe("Module 5: Admin Functions", function () {
+    it("Should allow owner to notify reward amount and update rewardRate", async function () {
+      const rewardAmount = ethers.parseEther("1000");
+
+      // Mint reward tokens to contract first so solvency check passes
+      await token.mint(await stakingRewards.getAddress(), rewardAmount);
+
+      // Call notifyRewardAmount as owner
+      await expect(stakingRewards.connect(owner).notifyRewardAmount(rewardAmount))
+        .to.emit(stakingRewards, "RewardAdded")
+        .withArgs(rewardAmount);
+
+      expect(await stakingRewards.rewardRate()).to.be.gt(0);
+    });
   });
 });
