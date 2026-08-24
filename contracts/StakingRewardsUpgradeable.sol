@@ -151,4 +151,6 @@ contract StakingRewardsUpgradeable is
         finishAt = block.timestamp + lockDuration;
         emit RewardAdded(reward);
     }
+
+    
 }

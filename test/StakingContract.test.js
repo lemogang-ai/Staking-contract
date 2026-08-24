@@ -131,4 +131,26 @@ describe("StakingRewardsUpgradeable Suite", function () {
       expect(await stakingRewards.rewardRate()).to.be.gt(0);
     });
   });
+
+  describe("Module 6: Upgradeability & Security Edge Cases", function () {
+    it("Should preserve state balances after a contract upgrade", async function () {
+      const stakeAmount = ethers.parseEther("100");
+
+      // 1. User stakes 100 tokens on V1
+      await token.mint(user1.address, stakeAmount);
+      await token.connect(user1).approve(await stakingRewards.getAddress(), stakeAmount);
+      await stakingRewards.connect(user1).stake(stakeAmount);
+
+      // 2. Deploy upgrade (V2)
+      const StakingRewardsV2 = await ethers.getContractFactory("StakingRewardsUpgradeable");
+      const upgradedRewards = await upgrades.upgradeProxy(
+        await stakingRewards.getAddress(),
+        StakingRewardsV2
+      );
+
+      // 3. Verify state retention on upgraded proxy
+      expect(await upgradedRewards.totalSupply()).to.equal(stakeAmount);
+      expect(await upgradedRewards.balanceOf(user1.address)).to.equal(stakeAmount);
+    });
+  });
 });
