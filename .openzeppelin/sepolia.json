@@ -1,0 +1,219 @@
+{
+  "manifestVersion": "3.2",
+  "proxies": [
+    {
+      "address": "0xe21254c9BD14D7B4381252407EBdfd6e9A220cFD",
+      "txHash": "0x6d00e63bf2c0125c85c858662a12a7e8c948c782cee5e5e5ba899ed47a205688",
+      "kind": "uups"
+    }
+  ],
+  "impls": {
+    "04bff9b4f0c3002c898ba4455bc94f969ed81fc6433534a3ee0d69369523fa4a": {
+      "address": "0x76D2D8B03a5F6258Cea57E38b41e04e84a2b7F1D",
+      "txHash": "0xeb4a4d8516f18b50f5791916f88655025a96391a700406f2794edaf5df4a4319",
+      "layout": {
+        "solcVersion": "0.8.26",
+        "storage": [
+          {
+            "label": "stakingToken",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_contract(IERC20)1747",
+            "contract": "StakingRewardsUpgradeable",
+            "src": "contracts/StakingRewardsUpgradeable.sol:15"
+          },
+          {
+            "label": "rewardsToken",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_contract(IERC20)1747",
+            "contract": "StakingRewardsUpgradeable",
+            "src": "contracts/StakingRewardsUpgradeable.sol:16"
+          },
+          {
+            "label": "devWallet",
+            "offset": 0,
+            "slot": "2",
+            "type": "t_address",
+            "contract": "StakingRewardsUpgradeable",
+            "src": "contracts/StakingRewardsUpgradeable.sol:17"
+          },
+          {
+            "label": "lockDuration",
+            "offset": 0,
+            "slot": "3",
+            "type": "t_uint256",
+            "contract": "StakingRewardsUpgradeable",
+            "src": "contracts/StakingRewardsUpgradeable.sol:20"
+          },
+          {
+            "label": "rewardRate",
+            "offset": 0,
+            "slot": "4",
+            "type": "t_uint256",
+            "contract": "StakingRewardsUpgradeable",
+            "src": "contracts/StakingRewardsUpgradeable.sol:21"
+          },
+          {
+            "label": "finishAt",
+            "offset": 0,
+            "slot": "5",
+            "type": "t_uint256",
+            "contract": "StakingRewardsUpgradeable",
+            "src": "contracts/StakingRewardsUpgradeable.sol:22"
+          },
+          {
+            "label": "updatedAt",
+            "offset": 0,
+            "slot": "6",
+            "type": "t_uint256",
+            "contract": "StakingRewardsUpgradeable",
+            "src": "contracts/StakingRewardsUpgradeable.sol:23"
+          },
+          {
+            "label": "rewardPerTokenStored",
+            "offset": 0,
+            "slot": "7",
+            "type": "t_uint256",
+            "contract": "StakingRewardsUpgradeable",
+            "src": "contracts/StakingRewardsUpgradeable.sol:24"
+          },
+          {
+            "label": "totalSupply",
+            "offset": 0,
+            "slot": "8",
+            "type": "t_uint256",
+            "contract": "StakingRewardsUpgradeable",
+            "src": "contracts/StakingRewardsUpgradeable.sol:27"
+          },
+          {
+            "label": "balanceOf",
+            "offset": 0,
+            "slot": "9",
+            "type": "t_mapping(t_address,t_uint256)",
+            "contract": "StakingRewardsUpgradeable",
+            "src": "contracts/StakingRewardsUpgradeable.sol:28"
+          },
+          {
+            "label": "userRewardPerTokenPaid",
+            "offset": 0,
+            "slot": "10",
+            "type": "t_mapping(t_address,t_uint256)",
+            "contract": "StakingRewardsUpgradeable",
+            "src": "contracts/StakingRewardsUpgradeable.sol:29"
+          },
+          {
+            "label": "rewards",
+            "offset": 0,
+            "slot": "11",
+            "type": "t_mapping(t_address,t_uint256)",
+            "contract": "StakingRewardsUpgradeable",
+            "src": "contracts/StakingRewardsUpgradeable.sol:30"
+          },
+          {
+            "label": "stakeTime",
+            "offset": 0,
+            "slot": "12",
+            "type": "t_mapping(t_address,t_uint256)",
+            "contract": "StakingRewardsUpgradeable",
+            "src": "contracts/StakingRewardsUpgradeable.sol:31"
+          },
+          {
+            "label": "_status",
+            "offset": 0,
+            "slot": "13",
+            "type": "t_uint256",
+            "contract": "StakingRewardsUpgradeable",
+            "src": "contracts/StakingRewardsUpgradeable.sol:36"
+          }
+        ],
+        "types": {
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          },
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
+          },
+          "t_struct(InitializableStorage)271_storage": {
+            "label": "struct Initializable.InitializableStorage",
+            "members": [
+              {
+                "label": "_initialized",
+                "type": "t_uint64",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "_initializing",
+                "type": "t_bool",
+                "offset": 8,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_struct(OwnableStorage)13_storage": {
+            "label": "struct OwnableUpgradeable.OwnableStorage",
+            "members": [
+              {
+                "label": "_owner",
+                "type": "t_address",
+                "offset": 0,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_uint64": {
+            "label": "uint64",
+            "numberOfBytes": "8"
+          },
+          "t_contract(IERC20)1747": {
+            "label": "contract IERC20",
+            "numberOfBytes": "20"
+          },
+          "t_mapping(t_address,t_uint256)": {
+            "label": "mapping(address => uint256)",
+            "numberOfBytes": "32"
+          },
+          "t_uint256": {
+            "label": "uint256",
+            "numberOfBytes": "32"
+          }
+        },
+        "namespaces": {
+          "erc7201:openzeppelin.storage.Ownable": [
+            {
+              "contract": "OwnableUpgradeable",
+              "label": "_owner",
+              "type": "t_address",
+              "src": "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:24",
+              "offset": 0,
+              "slot": "0"
+            }
+          ],
+          "erc7201:openzeppelin.storage.Initializable": [
+            {
+              "contract": "Initializable",
+              "label": "_initialized",
+              "type": "t_uint64",
+              "src": "@openzeppelin/contracts/proxy/utils/Initializable.sol:69",
+              "offset": 0,
+              "slot": "0"
+            },
+            {
+              "contract": "Initializable",
+              "label": "_initializing",
+              "type": "t_bool",
+              "src": "@openzeppelin/contracts/proxy/utils/Initializable.sol:73",
+              "offset": 8,
+              "slot": "0"
+            }
+          ]
+        }
+      }
+    }
+  }
+}
