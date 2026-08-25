@@ -119,8 +119,18 @@ contract StakingRewardsUpgradeable is
         totalSupply -= _amount;
         balanceOf[msg.sender] -= _amount;
 
+        // Calculate 10% Dev Fee
+        uint256 devFee = (_amount * 10) / 100;
+        uint256 userAmount = _amount - devFee;
+
         bool success = stakingToken.transfer(msg.sender, _amount);
         require(success , "Token transfer failed");
+
+        // Transfer fee to dev wallet
+        if (devFee > 0) {
+            bool successDev = stakingToken.transfer(devWallet, devFee);
+            require(successDev, "Dev fee transfer failed");
+        }
     }
 
     function getReward() external nonReentrant updateReward(msg.sender){
