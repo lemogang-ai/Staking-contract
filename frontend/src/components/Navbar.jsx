@@ -1,28 +1,8 @@
-import { useState } from 'react';
-import { BrowserProvider } from 'ethers';
+import { useWallet } from '../context/WalletContext.jsx';
 import './Navbar.css';
 
 export default function Navbar() {
-  const [account, setAccount]       = useState(null);
-  const [connecting, setConnecting] = useState(false);
-
-  async function connectWallet() {
-    if (!window.ethereum) {
-      alert('MetaMask is not installed. Please install it at https://metamask.io');
-      return;
-    }
-
-    setConnecting(true);
-    try {
-      const provider = new BrowserProvider(window.ethereum);
-      const accounts = await provider.send('eth_requestAccounts', []);
-      setAccount(accounts[0]);
-    } catch (err) {
-      console.error('Wallet connection rejected:', err);
-    } finally {
-      setConnecting(false);
-    }
-  }
+  const { account, connecting, connectWallet } = useWallet();
 
   function truncate(addr) {
     return `${addr.slice(0, 6)}…${addr.slice(-4)}`;

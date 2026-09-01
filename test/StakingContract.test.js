@@ -81,37 +81,51 @@ describe("StakingRewardsUpgradeable Suite", function () {
 
     it("Should allow user to withdraw staked tokens after lock duration", async function () {
       const stakeAmount = ethers.parseEther("100");
+      const expectedDevFee = ethers.parseEther("10");  // 10% dev fee
+      const expectedUserNet = ethers.parseEther("90");   // 90% net to user
 
-      // Setup: User stakes 100 tokens
+      // 1. User1 gets 100 tokens and stakes them
       await token.mint(user1.address, stakeAmount);
       await token.connect(user1).approve(await stakingRewards.getAddress(), stakeAmount);
       await stakingRewards.connect(user1).stake(stakeAmount);
 
-      // Fast-forward EVM time past lockDuration (7 days)
+      // 2. Record initial balances right before withdrawing
+      const initialDevBalance = await token.balanceOf(devWallet.address);
+      const initialUserBalance = await token.balanceOf(user1.address);
+
+      // 3. Fast-forward time past lock duration
       await ethers.provider.send("evm_increaseTime", [LOCK_DURATION + 1]);
       await ethers.provider.send("evm_mine");
 
-      // Call withdraw
+      // 4. User1 withdraws principal stake
       await stakingRewards.connect(user1).withdraw(stakeAmount);
 
-      // Assert state updates
-      expect(await stakingRewards.totalSupply()).to.equal(0);
-      expect(await stakingRewards.balanceOf(user1.address)).to.equal(0);
+      // 5. Measure relative balance increases
+      const finalDevBalance = await token.balanceOf(devWallet.address);
+      const finalUserBalance = await token.balanceOf(user1.address);
+
+      expect(finalUserBalance - initialUserBalance).to.equal(expectedUserNet);
+      expect(finalDevBalance - initialDevBalance).to.equal(expectedDevFee);
     });
 
     it("Should allow user to claim accumulated rewards", async function () {
       const stakeAmount = ethers.parseEther("100");
+      const rewardAmount = ethers.parseEther("1000");
 
-      // User stakes tokens
+      // 1. Fund contract with reward tokens & start reward rate
+      await token.mint(await stakingRewards.getAddress(), rewardAmount);
+      await stakingRewards.connect(owner).notifyRewardAmount(rewardAmount);
+
+      // 2. User stakes tokens
       await token.mint(user1.address, stakeAmount);
       await token.connect(user1).approve(await stakingRewards.getAddress(), stakeAmount);
       await stakingRewards.connect(user1).stake(stakeAmount);
 
-      // Fast-forward time so rewards accrue
-      await ethers.provider.send("evm_increaseTime", [86400]); // 1 day
+      // 3. Fast-forward time
+      await ethers.provider.send("evm_increaseTime", [86400]);
       await ethers.provider.send("evm_mine");
 
-      // Call getReward
+      // 4. Claim reward
       await expect(stakingRewards.connect(user1).getReward()).to.not.be.reverted;
     });
   });
