@@ -5,6 +5,7 @@ describe("StakingRewardsUpgradeable Suite", function () {
   let token, stakingRewards;
   let owner, devWallet, user1;
   const LOCK_DURATION = 7 * 24 * 60 * 60; // 7 days
+  const REWARDS_DURATION = 24 * 60 * 60; // 1 day
 
   beforeEach(async function () {
     [owner, devWallet, user1] = await ethers.getSigners();
@@ -21,7 +22,8 @@ describe("StakingRewardsUpgradeable Suite", function () {
         await token.getAddress(),
         await token.getAddress(),
         devWallet.address,
-        LOCK_DURATION
+        LOCK_DURATION,
+        REWARDS_DURATION
       ],
       { initializer: "initialize", kind: "uups" }
     );
@@ -35,6 +37,7 @@ describe("StakingRewardsUpgradeable Suite", function () {
       expect(await stakingRewards.rewardsToken()).to.equal(tokenAddress);
       expect(await stakingRewards.devWallet()).to.equal(devWallet.address);
       expect(await stakingRewards.lockDuration()).to.equal(LOCK_DURATION);
+      expect(await stakingRewards.rewardsDuration()).to.equal(REWARDS_DURATION);
       expect(await stakingRewards.owner()).to.equal(owner.address);
     });
 
@@ -45,7 +48,8 @@ describe("StakingRewardsUpgradeable Suite", function () {
           tokenAddress,
           tokenAddress,
           devWallet.address,
-          LOCK_DURATION
+          LOCK_DURATION,
+          REWARDS_DURATION
         )
       ).to.be.reverted;
     });
