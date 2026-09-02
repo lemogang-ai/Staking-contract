@@ -210,9 +210,7 @@ export default function StakingApp() {
           onChange={(e) => setAmount(e.target.value)}
           disabled={busy !== null}
         />
-        <button className="max-btn" onClick={() => setAmount(walletBalance)} disabled={busy !== null}>
-          Max
-        </button>
+        
       </div>
 
       <div className="staking-actions">
