@@ -1,221 +1,162 @@
-# staking-contract
+# Staking Contract (UUPS Upgradeable)
 
-> Scaffolded with [abc-scaffold](https://github.com/africas-blockchain-club/abc-scaffold) by **Africa's Blockchain Club**
+[![Solidity](https://img.shields.io/badge/Solidity-0.8.26-363636?style=flat-square&logo=solidity)](https://soliditylang.org/)
+[![Hardhat](https://img.shields.io/badge/Hardhat-2.19.4-yellow?style=flat-square&logo=ethereum)](https://hardhat.org/)
+[![OpenZeppelin](https://img.shields.io/badge/OpenZeppelin-v5.0-4E5EE4?style=flat-square&logo=openzeppelin)](https://openzeppelin.com/)
+[![React](https://img.shields.io/badge/React-Vite-61DAFB?style=flat-square&logo=react)](https://vitejs.dev/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg?style=flat-square)](https://opensource.org/licenses/MIT)
 
-A project-agnostic Hardhat workspace ready for smart contract development, testing, and frontend integration. Build anything — NFTs, DeFi protocols, DAOs, smart accounts, or any on-chain application.
+An ERC-20 staking protocol with Synthetix-style reward distribution, UUPS proxy upgradeability, time-locked withdrawals with dev fees, and a React + Vite web dashboard.
 
 ---
 
-## Prerequisites
+## Features
 
-| Tool | Version |
-|------|---------|
-| Node.js | >= 18.0.0 |
-| npm | >= 9.0.0 |
-| MetaMask | Latest |
+- **UUPS Upgradeable**: Logic contracts can be upgraded via OpenZeppelin's UUPS proxy while preserving all state and balances.
+- **Synthetix Reward Accrual**: Constant $O(1)$ gas complexity reward calculation per second.
+- **Timelock & Fee Mechanics**: Configurable lock duration before unstaking is permitted. A 10% dev fee is deducted on withdrawal and sent to `devWallet` (90% returned to user).
+- **Admin Management**: Scripts to easily mint test tokens, fund rewards, and notify reward schedules.
+- **Interactive Web UI**: React + Vite frontend with MetaMask connection, real-time lock countdown, and one-click stake/claim/unstake actions.
+
+---
+
+## Project Structure
+
+```text
+├── contracts/
+│   ├── StakingRewardsUpgradeable.sol   # Main UUPS staking contract
+│   └── MockToken.sol                   # ERC-20 test token
+├── scripts/
+│   ├── deploy.js                       # Deploys UUPS proxy & implementation
+│   ├── fund-contract.js                # Funds reward pool
+│   ├── notify.js                       # Starts/updates reward distribution schedule
+│   ├── mint.js                         # Mints test tokens (testnet)
+│   └── upgrade.js                      # Upgrades proxy implementation
+├── test/
+│   └── StakingContract.test.js         # Full suite of unit & upgrade tests
+├── frontend/                           # React + Vite application
+│   └── src/
+│       ├── components/StakingApp.jsx   # Staking dashboard & lock countdown
+│       └── config/contracts.js         # Contract addresses & ABIs
+└── hardhat.config.js                   # Hardhat network & compiler configuration
+```
 
 ---
 
 ## Getting Started
 
-### 1. Install dependencies
+### 1. Install Dependencies
 
 ```bash
 npm install
 ```
 
-### 2. Set up environment variables
+### 2. Configure Environment
+
+Copy the example file and fill in your keys:
 
 ```bash
 cp .env.example .env
 ```
 
-Fill in your values in `.env`:
+| Variable | Description |
+|---|---|
+| `SEPOLIA_RPC_URL` | Sepolia RPC endpoint (Alchemy / Infura) |
+| `PRIVATE_KEY` | Deployer / Owner wallet private key |
+| `ETHERSCAN_API_KEY` | Etherscan API key for contract verification |
+| `TOKEN_ADDRESS` | ERC-20 token address used for staking & rewards |
+| `LOCK_DURATION` | Lock period in seconds (e.g. `60` for test, `604800` for 7 days) |
+| `REWARDS_DURATION` | Reward distribution duration in seconds (e.g. `86400` = 1 day) |
 
-- `SEPOLIA_RPC_URL` — get one free from [Infura](https://infura.io) or [Alchemy](https://alchemy.com)
-- `PRIVATE_KEY` — your deployer wallet private key (**never commit this file**)
-- `ETHERSCAN_API_KEY` — for contract verification on [Etherscan](https://etherscan.io)
-
-### 3. Compile contracts
+### 3. Compile & Test
 
 ```bash
+# Compile contracts
 npx hardhat compile
-```
 
-### 4. Run tests
-
-```bash
+# Run tests
 npx hardhat test
 ```
 
-### 5. Deploy contracts locally
+---
 
-Open two terminals:
+## Deployment & Admin Lifecycle
+
+### Deploy Locally
 
 ```bash
-# Terminal 1 — start a local node
+# Terminal 1: Start node
 npx hardhat node
 
-# Terminal 2 — deploy your contracts
+# Terminal 2: Deploy
 npx hardhat run scripts/deploy.js --network localhost
 ```
 
-### 6. Start the frontend
+### Deploy to Sepolia
 
 ```bash
-cd frontend
-npm install
-npm run dev
-# → http://localhost:5173
+npx hardhat run scripts/deploy.js --network sepolia
 ```
 
----
+### Protocol Operations (Sepolia / Testnet)
 
-## Directory Structure
+1. **Mint tokens** to deployer wallet:
+   ```bash
+   npx hardhat run scripts/mint.js --network sepolia
+   ```
+2. **Fund rewards pool** (transfers tokens into staking contract):
+   ```bash
+   npx hardhat run scripts/fund-contract.js --network sepolia
+   ```
+3. **Notify rewards** (activates reward schedule):
+   ```bash
+   npx hardhat run scripts/notify.js --network sepolia
+   ```
 
-```
-staking-contract/
-├── contracts/          # Solidity smart contracts
-├── scripts/            # Deployment and utility scripts
-├── test/               # Hardhat test files
-├── frontend/           # React + Vite frontend
-│   └── src/
-│       ├── App.jsx
-│       └── components/
-│           └── Navbar.jsx   ← Connect Wallet button lives here
-├── hardhat.config.js   # Hardhat configuration
-├── .env.example        # Environment variable template
-└── README.md
-```
+### Upgrading the Contract (UUPS)
 
----
-
-## Writing Smart Contracts
-
-Place your Solidity files in `contracts/`. The config targets Solidity `0.8.26` with the Cancun EVM and the optimizer enabled (200 runs).
-
-**Example** — `contracts/MyContract.sol`:
-
-```solidity
-// SPDX-License-Identifier: MIT
-pragma solidity ^0.8.26;
-
-contract MyContract {
-    // Your logic here
-}
-```
-
-### Included libraries
-
-| Package | Use case |
-|---------|----------|
-| `@openzeppelin/contracts` | ERC-20, ERC-721, ERC-1155, access control, etc. |
-| `@openzeppelin/contracts-upgradeable` | UUPS / Transparent proxy upgradeable variants |
-| `@openzeppelin/hardhat-upgrades` | Deploy and upgrade helper tasks |
-| `@account-abstraction/contracts` | ERC-4337 interfaces and EntryPoint |
-
----
-
-## Writing Tests
-
-Place test files in `test/`. Hardhat ships with Mocha + Chai.
-
-**Example** — `test/MyContract.test.js`:
-
-```javascript
-const { expect } = require('chai');
-const { ethers } = require('hardhat');
-
-describe('MyContract', function () {
-  it('should deploy successfully', async function () {
-    const MyContract = await ethers.getContractFactory('MyContract');
-    const contract = await MyContract.deploy();
-    expect(await contract.getAddress()).to.not.equal(ethers.ZeroAddress);
-  });
-});
-```
-
----
-
-## Writing Deployment Scripts
-
-**Example** — `scripts/deploy.js`:
-
-```javascript
-const { ethers } = require('hardhat');
-
-async function main() {
-  const [deployer] = await ethers.getSigners();
-  console.log('Deploying from:', deployer.address);
-
-  const MyContract = await ethers.getContractFactory('MyContract');
-  const contract = await MyContract.deploy();
-  await contract.waitForDeployment();
-
-  console.log('MyContract deployed to:', await contract.getAddress());
-}
-
-main().catch((err) => {
-  console.error(err);
-  process.exitCode = 1;
-});
-```
-
----
-
-## Networks
-
-| Network | RPC | Chain ID |
-|---------|-----|----------|
-| Hardhat (local) | `http://127.0.0.1:8545` | 31337 |
-| Sepolia (testnet) | `SEPOLIA_RPC_URL` in `.env` | 11155111 |
-
----
-
-## Verifying Contracts
+To deploy and point the proxy to a new implementation:
 
 ```bash
-npx hardhat verify --network sepolia <CONTRACT_ADDRESS> <CONSTRUCTOR_ARGS>
+npx hardhat run scripts/upgrade.js --network sepolia
+```
+
+### Contract Verification
+
+```bash
+npx hardhat verify --network sepolia <DEPLOYED_CONTRACT_ADDRESS> <CONSTRUCTOR_ARGS>
 ```
 
 ---
 
-## Frontend
+## Frontend Web App
 
-The `frontend/` folder is a Vite + React app with:
+1. Enter your contract addresses in `frontend/src/config/contracts.js`:
+   ```javascript
+   export const STAKING_CONTRACT_ADDRESS = '0x...';
+   export const STAKING_TOKEN_ADDRESS = '0x...';
+   ```
 
-- A sticky navigation bar with a **Connect Wallet** button (MetaMask / EIP-1193)
-- Ethers.js v6 already wired up
+2. Start the development server:
+   ```bash
+   cd frontend
+   npm install
+   npm run dev
+   ```
 
-### Connecting to a deployed contract
-
-Copy the ABI from `artifacts/contracts/YourContract.sol/YourContract.json` and import it:
-
-```javascript
-import { BrowserProvider, Contract } from 'ethers';
-import MyContractABI from '../../artifacts/contracts/MyContract.sol/MyContract.json';
-
-const CONTRACT_ADDRESS = '0x...';
-
-async function interact() {
-  const provider = new BrowserProvider(window.ethereum);
-  const signer   = await provider.getSigner();
-  const contract = new Contract(CONTRACT_ADDRESS, MyContractABI.abi, signer);
-  // call contract methods here
-}
-```
+Open [http://localhost:5173](http://localhost:5173) to connect MetaMask and interact with the staking pool.
 
 ---
 
-## Resources
+## Deployed Contracts (Sepolia)
 
-- [Hardhat Docs](https://hardhat.org/docs)
-- [Solidity Docs](https://docs.soliditylang.org)
-- [OpenZeppelin Docs](https://docs.openzeppelin.com)
-- [EIP-4337 (Account Abstraction)](https://eips.ethereum.org/EIPS/eip-4337)
-- [Ethers.js v6 Docs](https://docs.ethers.org/v6)
-- [Vite Docs](https://vitejs.dev)
+| Contract | Address | Explorer |
+|---|---|---|
+| **StakingRewards (Proxy)** | `0x5D03049E1DFa6Ffe799b599F13B576D5BEf99474` | [Etherscan](https://sepolia.etherscan.io/address/0x5D03049E1DFa6Ffe799b599F13B576D5BEf99474) |
+| **MockToken (MTK)** | `0x0D15D5f0781367938B8C2437A1F86ac3B810Bb8c` | [Etherscan](https://sepolia.etherscan.io/address/0x0D15D5f0781367938B8C2437A1F86ac3B810Bb8c) |
 
 ---
 
-*Built with Africa's Blockchain Club — scaffold your next project with `npx abc-scaffold`.*
+## License
+
+Released under the [MIT License](https://opensource.org/licenses/MIT). Scaffolded with [abc-scaffold](https://github.com/africas-blockchain-club/abc-scaffold).
