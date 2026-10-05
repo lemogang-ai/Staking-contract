@@ -40,6 +40,10 @@ contract StakingRewardsUpgradeable is
     event LockDurationUpdated(uint256 newLockDuration);
     event RewardsDurationUpdated(uint256 newRewardsDuration);
 
+    event Staked(address indexed user, uint256 amount);
+    event Withdrawn(address indexed user, uint256 amount);
+    event RewardPaid(address indexed user, uint256 reward);
+
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
         _disableInitializers();
@@ -129,6 +133,7 @@ contract StakingRewardsUpgradeable is
 
         bool success = stakingToken.transferFrom(msg.sender, address(this), _amount);
         require(success, "Token transfer failed");
+        emit Staked(msg.sender, _amount); 
     }
 
     function withdraw(uint256 _amount) external nonReentrant updateReward(msg.sender) {
@@ -149,6 +154,8 @@ contract StakingRewardsUpgradeable is
             bool successDev = stakingToken.transfer(devWallet, devFee);
             require(successDev, "Dev fee transfer failed");
         }
+
+        emit Withdrawn(msg.sender, _amount);
     }
 
     function getReward() external nonReentrant updateReward(msg.sender) {
@@ -158,6 +165,8 @@ contract StakingRewardsUpgradeable is
             rewards[msg.sender] = 0;
             bool success = rewardsToken.transfer(msg.sender, userReward);
             require(success, "Reward transfer failed");
+
+            emit RewardPaid(msg.sender, userReward);
         }
     }
 
