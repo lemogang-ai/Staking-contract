@@ -1,0 +1,40 @@
+ generator client {
+      provider = "prisma-client-js"
+    }
+    
+    datasource db {
+      provider = "sqlite"
+      url      = env("DATABASE_URL")
+    }
+    
+    // 1. Keeps track of our indexer's progress (the sync cursor)
+    model SyncState {
+      id              String   @id @default("staking_sync")
+      lastSyncedBlock BigInt
+      updatedAt       DateTime @updatedAt
+    }
+    
+    // 2. An immutable ledger of all on-chain events detected
+    model StakingEvent {
+      id          String   @id // e.g. txHash_logIndex to guarantee idempotency
+      type        String   // "STAKED" | "WITHDRAWN" | "REWARD_PAID" | "REWARD_ADDED"
+      userAddress String?  // Optional because REWARD_ADDED is protocol-wide, not user-specific
+      amount      String   // Stored as string to prevent uint256 precision loss in JavaScript
+      blockNumber BigInt
+      txHash      String
+      timestamp   DateTime @default(now())
+    
+      @@index([userAddress])
+      @@index([type])
+    }
+    
+    // 3. Materialized aggregate statistics per user (fast profile lookups)
+    model UserStat {
+      userAddress     String   @id
+      totalStaked     String   @default("0")
+      totalWithdrawn  String   @default("0")
+      totalClaimed    String   @default("0")
+      currentStaked   String   @default("0")
+      lastActiveBlock BigInt
+      updatedAt       DateTime @updatedAt
+    }
