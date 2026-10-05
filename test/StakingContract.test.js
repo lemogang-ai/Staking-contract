@@ -76,7 +76,9 @@ describe("StakingRewardsUpgradeable Suite", function () {
       await token.connect(user1).approve(await stakingRewards.getAddress(), stakeAmount);
 
       // 3. Call stake
-      await stakingRewards.connect(user1).stake(stakeAmount);
+      await expect(stakingRewards.connect(user1).stake(stakeAmount))
+      .to.emit(stakingRewards, "Staked")
+      .withArgs(user1.address, stakeAmount);
 
       // 4. Assert state changes
       expect(await stakingRewards.totalSupply()).to.equal(stakeAmount);
@@ -102,7 +104,9 @@ describe("StakingRewardsUpgradeable Suite", function () {
       await ethers.provider.send("evm_mine");
 
       // 4. User1 withdraws principal stake
-      await stakingRewards.connect(user1).withdraw(stakeAmount);
+      await expect(stakingRewards.connect(user1).withdraw(stakeAmount))
+      .to.emit(stakingRewards, "Withdrawn")
+      .withArgs(user1.address, stakeAmount);
 
       // 5. Measure relative balance increases
       const finalDevBalance = await token.balanceOf(devWallet.address);
@@ -130,7 +134,8 @@ describe("StakingRewardsUpgradeable Suite", function () {
       await ethers.provider.send("evm_mine");
 
       // 4. Claim reward
-      await expect(stakingRewards.connect(user1).getReward()).to.not.be.reverted;
+      await expect(stakingRewards.connect(user1).getReward())
+        .to.emit(stakingRewards, "RewardPaid");
     });
   });
 
