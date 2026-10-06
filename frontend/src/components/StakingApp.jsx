@@ -22,6 +22,8 @@ export default function StakingApp() {
   const [amount, setAmount] = useState('');
   const [busy, setBusy] = useState(null); // 'stake' | 'withdraw' | 'claim' | null
   const [status, setStatus] = useState('');
+  const [activity, setActivity] = useState([]);
+  const [activityError, setActivityError] = useState('');
   const [now, setNow] = useState(Math.floor(Date.now() / 1000));
 
   const configured =
@@ -69,6 +71,35 @@ export default function StakingApp() {
     const id = setInterval(refresh, 15000);
     return () => clearInterval(id);
   }, [refresh]);
+
+  useEffect(() => {
+    if (!account) {
+      setActivity([]);
+      setActivityError('');
+      return;
+    }
+    let cancelled = false;
+    const loadActivity = async () => {
+      try {
+        const apiBase = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
+        const response = await fetch(`${apiBase}/api/v1/user/${account}/activity?limit=10`);
+        const payload = await response.json();
+        if (!response.ok || !payload.success) throw new Error(payload.error || 'Activity unavailable');
+        if (!cancelled) {
+          setActivity(payload.history);
+          setActivityError('');
+        }
+      } catch (error) {
+        if (!cancelled) setActivityError(error.message || 'Could not load activity');
+      }
+    };
+    loadActivity();
+    const id = setInterval(loadActivity, 15000);
+    return () => {
+      cancelled = true;
+      clearInterval(id);
+    };
+  }, [account]);
 
   async function handleStake() {
     if (!provider || !amount || Number(amount) <= 0) return;
@@ -235,6 +266,27 @@ export default function StakingApp() {
 
       {status && <p className="staking-status">{status}</p>}
       <p className="fee-note">Withdrawals include a 10% protocol fee.</p>
+
+      <section className="activity-section" aria-labelledby="activity-title">
+        <h2 id="activity-title">Recent activity</h2>
+        {activityError ? (
+          <p className="activity-empty">{activityError}. Start the backend indexer to load history.</p>
+        ) : activity.length === 0 ? (
+          <p className="activity-empty">No indexed staking activity yet.</p>
+        ) : (
+          <ul className="activity-list">
+            {activity.map((event) => (
+              <li className="activity-item" key={event.transactionHash + event.type + event.blockNumber}>
+                <span>{event.type.replace('_', ' ')}</span>
+                <strong>{formatAmount(formatUnits(BigInt(event.amount), decimals), 4)} {symbol}</strong>
+                <a href={`https://sepolia.etherscan.io/tx/${event.transactionHash}`} target="_blank" rel="noreferrer">
+                  Block {event.blockNumber}
+                </a>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
     </div>
   );
 }

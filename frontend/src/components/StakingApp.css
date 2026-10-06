@@ -169,11 +169,70 @@
   color: #55556b;
 }
 
+.activity-section {
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid #23233a;
+}
+
+.activity-section h2 {
+  margin: 0 0 0.75rem;
+  color: #e2e2e2;
+  font-size: 0.9rem;
+}
+
+.activity-empty {
+  color: #8a8aa3;
+  font-size: 0.8rem;
+}
+
+.activity-list {
+  display: grid;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.activity-item {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.65rem 0.75rem;
+  background: #0f0f19;
+  border-radius: 8px;
+  color: #8a8aa3;
+  font-size: 0.75rem;
+}
+
+.activity-item strong {
+  color: #e2e2e2;
+  font-family: 'JetBrains Mono', 'SFMono-Regular', Menlo, monospace;
+  font-weight: 500;
+  text-align: right;
+}
+
+.activity-item a {
+  color: #22d3c9;
+  text-decoration: none;
+}
+
+.activity-item a:hover {
+  text-decoration: underline;
+}
+
 @media (max-width: 480px) {
   .staking-stats {
     grid-template-columns: 1fr;
   }
   .staking-actions {
     grid-template-columns: 1fr 1fr;
+  }
+  .activity-item {
+    grid-template-columns: 1fr auto;
+  }
+  .activity-item a {
+    grid-column: 1 / -1;
   }
 }
