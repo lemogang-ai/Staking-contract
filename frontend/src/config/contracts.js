@@ -1,6 +1,6 @@
 // Fill these in after running:
 //   npx hardhat run scripts/deploy.js --network localhost
-export const STAKING_CONTRACT_ADDRESS = '0x5D03049E1DFa6Ffe799b599F13B576D5BEf99474';
+export const STAKING_CONTRACT_ADDRESS = '0x552b320B6383956455586435D8079d799efCc3c0';
 export const STAKING_TOKEN_ADDRESS = '0x0D15D5f0781367938B8C2437A1F86ac3B810Bb8c';
 
 // Minimal ABI — only what the frontend calls
