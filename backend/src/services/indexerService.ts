@@ -1,105 +1,84 @@
 import { prisma } from "../db";
-    
+
 const SYNC_ID = "staking_sync";
 
-/**
- * Retrieves the last block number processed by the indexer.
- * If running for the first time, initializes it with fallbackBlock.
- */
 export async function getLastSyncedBlock(fallbackBlock: bigint): Promise<bigint> {
-    const state = await prisma.syncState.findUnique({
+  const state = await prisma.syncState.upsert({
     where: { id: SYNC_ID },
-    });
-
-    if (!state) {
-    await prisma.syncState.create({
-        data: {
-        id: SYNC_ID,
-        lastSyncedBlock: fallbackBlock,
-        },
-    });
-    return fallbackBlock;
-    }
-
-    return state.lastSyncedBlock;
+    update: {},
+    create: { id: SYNC_ID, lastSyncedBlock: fallbackBlock },
+  });
+  return state.lastSyncedBlock;
 }
 
-/**
- * Updates the sync cursor to the most recently completed block.
- */
 export async function updateLastSyncedBlock(blockNumber: bigint): Promise<void> {
-    await prisma.syncState.upsert({
+  await prisma.syncState.upsert({
     where: { id: SYNC_ID },
     update: { lastSyncedBlock: blockNumber },
     create: { id: SYNC_ID, lastSyncedBlock: blockNumber },
-    });
+  });
 }
 
-/**
- * Records an on-chain event idempotently (preventing duplicates if re-indexed)
- */
 export async function recordEvent(params: {
-    id: string;
-    type: "STAKED" | "WITHDRAWN" | "REWARD_PAID" | "REWARD_ADDED";
-    userAddress?: string;
-    amount: bigint;
-    blockNumber: bigint;
-    txHash: string;
+  id: string;
+  type: "STAKED" | "WITHDRAWN" | "REWARD_PAID" | "REWARD_ADDED";
+  userAddress?: string;
+  amount: bigint;
+  blockNumber: bigint;
+  txHash: string;
 }): Promise<void> {
-    const normalizedUser = params.userAddress ? params.userAddress.toLowerCase() : null;
+  const userAddress = params.userAddress?.toLowerCase() ?? null;
 
-    // 1. Save the immutable event
-    await prisma.stakingEvent.upsert({
-    where: { id: params.id },
-    update: {}, // If already recorded, do nothing (idempotent)
-    create: {
+  await prisma.$transaction(async (tx) => {
+    // Only apply the aggregate once, even if a block is replayed after restart.
+    const existing = await tx.stakingEvent.findUnique({ where: { id: params.id } });
+    if (existing) return;
+
+    await tx.stakingEvent.create({
+      data: {
         id: params.id,
         type: params.type,
-        userAddress: normalizedUser,
+        userAddress,
         amount: params.amount.toString(),
         blockNumber: params.blockNumber,
         txHash: params.txHash,
-    },
+      },
     });
 
-    // 2. If it's a user event, update their aggregate stats
-    if (normalizedUser) {
-    const existing = await prisma.userStat.findUnique({
-        where: { userAddress: normalizedUser },
-    });
-
-    let current = existing ? BigInt(existing.currentStaked) : 0n;
-    let totalStaked = existing ? BigInt(existing.totalStaked) : 0n;
-    let totalWithdrawn = existing ? BigInt(existing.totalWithdrawn) : 0n;
-    let totalClaimed = existing ? BigInt(existing.totalClaimed) : 0n;
+    if (!userAddress) return;
+    const current = await tx.userStat.findUnique({ where: { userAddress } });
+    let currentStaked = BigInt(current?.currentStaked ?? "0");
+    let totalStaked = BigInt(current?.totalStaked ?? "0");
+    let totalWithdrawn = BigInt(current?.totalWithdrawn ?? "0");
+    let totalClaimed = BigInt(current?.totalClaimed ?? "0");
 
     if (params.type === "STAKED") {
-        current += params.amount;
-        totalStaked += params.amount;
+      currentStaked += params.amount;
+      totalStaked += params.amount;
     } else if (params.type === "WITHDRAWN") {
-        current = current >= params.amount ? current - params.amount : 0n;
-        totalWithdrawn += params.amount;
+      currentStaked = currentStaked >= params.amount ? currentStaked - params.amount : 0n;
+      totalWithdrawn += params.amount;
     } else if (params.type === "REWARD_PAID") {
-        totalClaimed += params.amount;
+      totalClaimed += params.amount;
     }
 
-    await prisma.userStat.upsert({
-        where: { userAddress: normalizedUser },
-        update: {
-        currentStaked: current.toString(),
+    await tx.userStat.upsert({
+      where: { userAddress },
+      update: {
+        currentStaked: currentStaked.toString(),
         totalStaked: totalStaked.toString(),
         totalWithdrawn: totalWithdrawn.toString(),
         totalClaimed: totalClaimed.toString(),
         lastActiveBlock: params.blockNumber,
-        },
-        create: {
-        userAddress: normalizedUser,
-        currentStaked: current.toString(),
+      },
+      create: {
+        userAddress,
+        currentStaked: currentStaked.toString(),
         totalStaked: totalStaked.toString(),
         totalWithdrawn: totalWithdrawn.toString(),
         totalClaimed: totalClaimed.toString(),
         lastActiveBlock: params.blockNumber,
-        },
+      },
     });
-    }
+  });
 }

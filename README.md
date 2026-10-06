@@ -63,7 +63,7 @@ In addition, the protocol incorporates:
 - **Solvency Protection**: `notifyRewardAmount` validates that the contract holds sufficient reward tokens to cover the distribution schedule before starting the emission window.
 - **Upgrade-Safe Reentrancy Protection**: Custom storage-safe non-reentrant guard designed specifically for upgradeable proxies.
 - **Interactive Web3 Frontend**: React 18 + Vite dApp featuring MetaMask connection, token approval workflows, dynamic balance cards, and live time-lock countdown progress bars.
-- **Dual-Engine Event Indexer**: Off-chain Node.js/TypeScript microservice with Viem that catches up on historical `Staked` logs and maintains a real-time event subscription with a REST API endpoint.
+- **Persistent Event Indexer**: Off-chain Node.js/TypeScript service with Viem that incrementally scans staking events, stores them in SQLite, and resumes from a persisted block cursor.
 
 ---
 
@@ -369,7 +369,7 @@ Navigate to `http://localhost:5173`.
 
 ## Off-Chain Backend & Event Indexer
 
-The backend service indexes staking events for analytics, dashboards, and historical logging.
+The backend service indexes `Staked`, `Withdrawn`, `RewardPaid`, and `RewardAdded` events. SQLite stores the event ledger, per-user aggregates, and the last fully processed block. The sync loop retries failed ranges and safely replays saved events after a restart.
 
 ### Running the Backend
 
@@ -378,14 +378,18 @@ cd backend
 npm run dev
 ```
 
-The server will start on `http://localhost:5000`:
-- **Historical Catch-Up**: Queries past `Staked` logs from `DEPLOYMENT_BLOCK` to the latest on-chain block.
-- **Real-Time Listener**: Subscribes to live `Staked` contract events via Viem's `watchContractEvent`.
+The server will start on `http://localhost:5000`. It scans from `DEPLOYMENT_BLOCK` through the latest block in chunks, then polls for new blocks every five seconds. Its health endpoint reports the persisted cursor.
 
 ### API Reference
 
+#### Health and sync cursor
+
+```http
+GET /api/v1/health
+```
+
 #### Get User Staking Activity
-Returns the historical staking transactions for a given wallet address.
+Returns up to 100 most recent indexed events for a given wallet address. `amount` is the raw token integer string; clients should format it using the token's decimals.
 
 ```http
 GET /api/v1/user/:address/activity
@@ -409,6 +413,16 @@ GET /api/v1/user/:address/activity
   ]
 }
 ```
+
+#### Get User Statistics
+
+```http
+GET /api/v1/user/:address/stats
+```
+
+Returns `totalStaked`, `totalWithdrawn`, `totalClaimed`, and `currentStaked` as integer strings, plus the last active block.
+
+The React staking screen reads live balances and submits transactions directly through the connected wallet. It uses the activity endpoint for recent transaction history. Set `VITE_API_BASE_URL` in `frontend/.env` if the API is hosted somewhere other than `http://localhost:5000`.
 
 ---
 
