@@ -12,7 +12,7 @@ export default function Navbar() {
     <nav className="navbar">
       <div className="navbar-brand">
         <span className="navbar-logo">🔗</span>
-        <span className="navbar-title">Africa's Blockchain Club</span>
+        <span className="navbar-title">Staking Protocol</span>
       </div>
 
       <div className="navbar-actions">
